@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="hu" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rádió Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root{--bg-body:#f5f7fa;--bg-white:#fff;--bg-sidebar:#fff;--bg-input:#f8f9fb;--bg-hover:#f1f5f9;--border:#e2e8f0;--border-focus:#6366f1;--text-1:#1e293b;--text-2:#64748b;--text-3:#94a3b8;--accent:#6366f1;--accent-2:#ec4899;--success:#10b981;--danger:#ef4444;--shadow:0 1px 3px rgba(0,0,0,.08)}
+        [data-theme="dark"]{--bg-body:#0f111a;--bg-white:#1a1d2e;--bg-sidebar:#141625;--bg-input:#0d0f17;--bg-hover:#252a3d;--border:#2a2f45;--border-focus:#818cf8;--text-1:#f1f5f9;--text-2:#94a3b8;--text-3:#64748b;--shadow:0 1px 3px rgba(0,0,0,.3)}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',sans-serif;background:var(--bg-body);color:var(--text-1);min-height:100vh;transition:background .3s,color .3s}
+        .layout{display:flex;min-height:100vh}
+        
+        .sidebar{width:240px;background:var(--bg-sidebar);border-right:1px solid var(--border);padding:16px 12px;position:fixed;height:100vh;overflow-y:auto;transition:background .3s;display:flex;flex-direction:column}
+        .brand{display:flex;align-items:center;gap:10px;padding:0 10px 16px;margin-bottom:16px;border-bottom:1px solid var(--border)}
+        .brand-icon{width:36px;height:36px;background:linear-gradient(135deg,#6366f1,#ec4899);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px}
+        .brand-text{font-weight:700;font-size:14px}.brand-text span{display:block;font-size:10px;font-weight:500;color:var(--text-3)}
+        
+        .sidebar-section{margin-bottom:16px}
+        .sidebar-section-title{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-3);padding:0 10px;margin-bottom:6px}
+        
+        .toggle-group{display:flex;background:var(--bg-input);border-radius:8px;padding:3px;margin:0 8px 12px;border:1px solid var(--border)}
+        .toggle-btn{flex:1;padding:6px;border:none;background:0;border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;font-size:10px;font-weight:500;color:var(--text-3);transition:all .2s;font-family:inherit}
+        .toggle-btn.active{background:var(--bg-white);color:var(--text-1);box-shadow:var(--shadow)}
+        .toggle-btn svg{width:12px;height:12px}
+        
+        .lang-select{margin:0 8px 12px;position:relative}
+        .lang-btn{width:100%;padding:8px 10px;background:var(--bg-input);border:1px solid var(--border);border-radius:7px;display:flex;align-items:center;gap:8px;cursor:pointer;font-size:11px;font-weight:500;color:var(--text-1);font-family:inherit;transition:all .15s}
+        .lang-btn:hover{border-color:var(--text-3)}
+        .lang-btn .flag{font-size:14px}
+        .lang-btn .arrow{margin-left:auto;width:12px;height:12px;transition:transform .2s}
+        .lang-btn.open .arrow{transform:rotate(180deg)}
+        .lang-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--bg-white);border:1px solid var(--border);border-radius:7px;margin-top:4px;box-shadow:0 10px 40px rgba(0,0,0,.15);z-index:100;display:none;max-height:240px;overflow-y:auto}
+        .lang-dropdown.show{display:block}
+        .lang-option{padding:8px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;font-size:11px;transition:background .15s}
+        .lang-option:hover{background:var(--bg-hover)}
+        .lang-option.active{background:rgba(99,102,241,.1);color:var(--accent)}
+        .lang-option .flag{font-size:14px}
+        
+        .nav-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;color:var(--text-2);font-size:12px;font-weight:500;cursor:pointer;margin:0 8px 2px;transition:all .15s;text-decoration:none}
+        .nav-item:hover{background:var(--bg-hover);color:var(--text-1)}
+        .nav-item.active{background:linear-gradient(135deg,rgba(99,102,241,.15),rgba(236,72,153,.1));color:var(--accent)}
+        .nav-item svg{width:15px;height:15px;opacity:.6}
+        .nav-item.active svg{opacity:1}
+        
+        .sidebar-footer{margin-top:auto;padding:12px 8px;border-top:1px solid var(--border)}
+        .sidebar-footer-text{font-size:9px;color:var(--text-3);text-align:center}
+        
+        .main{flex:1;margin-left:240px;display:flex}
+        .content{flex:1;padding:24px;max-width:620px;overflow-y:auto;height:100vh}
+        .page-header{margin-bottom:20px}
+        .page-title{font-size:20px;font-weight:700;margin-bottom:3px}
+        .page-desc{color:var(--text-2);font-size:12px}
+        
+        /* Page sections */
+        .page-section{display:none}
+        .page-section.active{display:block}
+        
+        .card{background:var(--bg-white);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px;transition:background .3s}
+        .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+        .card-title{font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px}
+        .card-icon{width:26px;height:26px;background:linear-gradient(135deg,rgba(99,102,241,.15),rgba(236,72,153,.1));border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--accent)}
+        .card-icon svg{width:12px;height:12px}
+        .card-badge{font-size:9px;font-weight:600;padding:3px 7px;border-radius:20px;background:rgba(16,185,129,.15);color:var(--success)}
+        
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+        .form-group{display:flex;flex-direction:column;gap:4px}
+        .form-group.full{grid-column:1/-1}
+        .form-label{font-size:11px;font-weight:500;color:var(--text-2)}
+        .form-label .req{color:var(--accent-2)}
+        .form-input,.form-textarea,.form-select{background:var(--bg-input);border:1px solid var(--border);border-radius:7px;padding:9px 11px;font-size:12px;color:var(--text-1);font-family:inherit;transition:all .15s;width:100%}
+        .form-input:focus,.form-textarea:focus,.form-select:focus{outline:none;border-color:var(--border-focus);box-shadow:0 0 0 3px rgba(99,102,241,.1)}
+        .form-input::placeholder,.form-textarea::placeholder{color:var(--text-3)}
+        .form-textarea{resize:vertical;min-height:60px}
+        
+        .stream-list{display:flex;flex-direction:column;gap:8px}
+        .stream-item{background:var(--bg-input);border:1px solid var(--border);border-radius:10px;padding:12px;transition:all .2s}
+        .stream-item.active{border-color:var(--accent);background:rgba(99,102,241,.05)}
+        .stream-item-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+        .stream-item-title{font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px}
+        .stream-badge{font-size:9px;padding:2px 6px;border-radius:10px;background:var(--accent);color:#fff}
+        .stream-badge.secondary{background:var(--bg-hover);color:var(--text-2)}
+        .stream-actions{display:flex;gap:4px}
+        .stream-action{width:26px;height:26px;border:none;background:var(--bg-white);border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-3);transition:all .15s}
+        .stream-action:hover{color:var(--text-1);background:var(--bg-hover)}
+        .stream-action.delete:hover{color:var(--danger);background:rgba(239,68,68,.1)}
+        .stream-action svg{width:12px;height:12px}
+        .stream-fields{display:grid;grid-template-columns:1fr 100px;gap:8px}
+        .stream-fields .form-input{font-size:11px;padding:7px 9px}
+        
+        .add-stream-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;border:2px dashed var(--border);border-radius:10px;background:0;color:var(--text-3);font-size:11px;font-weight:500;cursor:pointer;transition:all .15s;width:100%;font-family:inherit}
+        .add-stream-btn:hover{border-color:var(--accent);color:var(--accent)}
+        .add-stream-btn svg{width:14px;height:14px}
+        
+        .logo-section{display:flex;gap:14px;align-items:flex-start}
+        .logo-box{width:80px;height:80px;border-radius:12px;background:linear-gradient(135deg,#00d4ff,#ff00aa,#9945ff);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff;flex-shrink:0;position:relative;overflow:hidden}
+        .logo-box img{width:100%;height:100%;object-fit:cover}
+        .upload-zone{flex:1;border:2px dashed var(--border);border-radius:10px;padding:14px;text-align:center;cursor:pointer;transition:all .15s}
+        .upload-zone:hover{border-color:var(--accent);background:rgba(99,102,241,.03)}
+        .upload-zone svg{width:24px;height:24px;color:var(--text-3);margin-bottom:4px}
+        .upload-text{font-size:11px;color:var(--text-2)}
+        .upload-text strong{color:var(--accent)}
+        .upload-hint{font-size:9px;color:var(--text-3);margin-top:2px}
+        
+        .logo-options{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+        .logo-option{border:2px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .2s}
+        .logo-option:hover{border-color:var(--text-3)}
+        .logo-option.active{border-color:var(--accent);background:rgba(99,102,241,.05)}
+        .logo-option-preview{width:44px;height:44px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff}
+        .logo-option-preview.circle{border-radius:50%;background:linear-gradient(135deg,#00d4ff,#ff00aa)}
+        .logo-option-preview.rounded{border-radius:10px;background:linear-gradient(135deg,#00d4ff,#ff00aa)}
+        .logo-option-preview.square{border-radius:4px;background:linear-gradient(135deg,#00d4ff,#ff00aa)}
+        .logo-option-label{font-size:10px;color:var(--text-2);font-weight:500}
+        
+        .bg-section{margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+        .bg-section-title{font-size:12px;font-weight:600;margin-bottom:4px}
+        .bg-section-desc{font-size:10px;color:var(--text-3);margin-bottom:12px}
+        .bg-options{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+        .bg-option{border:2px solid var(--border);border-radius:10px;padding:14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:all .2s}
+        .bg-option:hover{border-color:var(--text-3)}
+        .bg-option.active{border-color:var(--accent);background:rgba(99,102,241,.05)}
+        .bg-option-icon{width:36px;height:36px;background:var(--bg-input);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-2)}
+        .bg-option-icon svg{width:18px;height:18px}
+        .bg-option-text{flex:1}
+        .bg-option-label{font-size:11px;font-weight:600}
+        .bg-option-upload{font-size:10px;color:var(--accent);font-weight:500}
+        .bg-effects{margin-top:14px}
+        .bg-effects-title{font-size:11px;font-weight:500;color:var(--text-2);margin-bottom:8px}
+        .effect-options{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+        .effect-option{border:2px solid var(--border);border-radius:8px;padding:10px;text-align:center;cursor:pointer;transition:all .2s}
+        .effect-option:hover{border-color:var(--text-3)}
+        .effect-option.active{border-color:var(--accent);background:rgba(99,102,241,.05)}
+        .effect-option svg{width:20px;height:20px;color:var(--text-2);margin-bottom:4px}
+        .effect-option.active svg{color:var(--accent)}
+        .effect-option-label{font-size:10px;color:var(--text-2);font-weight:500}
+        
+        .colors-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+        .color-item{display:flex;flex-direction:column;gap:4px}
+        .color-label{font-size:9px;color:var(--text-3)}
+        .color-picker{display:flex;align-items:center;gap:5px;background:var(--bg-input);border:1px solid var(--border);border-radius:7px;padding:4px 7px}
+        .color-swatch{width:22px;height:22px;border-radius:5px;border:none;cursor:pointer;padding:0}
+        .color-swatch::-webkit-color-swatch-wrapper{padding:0}
+        .color-swatch::-webkit-color-swatch{border:none;border-radius:5px}
+        .color-hex{flex:1;background:0;border:none;color:var(--text-1);font-family:monospace;font-size:10px;text-transform:uppercase;width:55px}
+        .color-hex:focus{outline:none}
+        
+        .btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-bottom:20px}
+        .btn{padding:9px 16px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px;border:none;font-family:inherit}
+        .btn-ghost{background:0;color:var(--text-2);border:1px solid var(--border)}
+        .btn-ghost:hover{background:var(--bg-hover);color:var(--text-1)}
+        .btn-primary{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;box-shadow:0 2px 8px rgba(99,102,241,.3)}
+        .btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(99,102,241,.4)}
+        
+        /* Preview Panel */
+        .preview{width:340px;background:var(--bg-white);border-left:1px solid var(--border);padding:16px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;transition:background .3s}
+        .preview-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+        .preview-title{font-size:11px;font-weight:600;color:var(--text-2);display:flex;align-items:center;gap:5px}
+        .preview-title svg{width:12px;height:12px}
+        .preview-live{display:flex;align-items:center;gap:4px;font-size:9px;font-weight:600;color:var(--success)}
+        .preview-live::before{content:'';width:5px;height:5px;background:var(--success);border-radius:50%;animation:pulse 2s infinite}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+        
+        .preview-toggles{display:flex;gap:6px;margin-bottom:12px}
+        .preview-toggle-group{flex:1;display:flex;background:var(--bg-input);border-radius:7px;padding:3px;border:1px solid var(--border)}
+        .preview-toggle-btn{flex:1;padding:5px 6px;border:none;background:0;border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:3px;font-size:9px;font-weight:500;color:var(--text-3);transition:all .2s;font-family:inherit}
+        .preview-toggle-btn.active{background:var(--bg-white);color:var(--text-1);box-shadow:var(--shadow)}
+        .preview-toggle-btn svg{width:11px;height:11px}
+        
+        .phone-wrap{flex:1;display:flex;align-items:center;justify-content:center}
+        .phone{width:220px;height:460px;border-radius:30px;padding:8px;box-shadow:0 10px 40px rgba(0,0,0,.3);position:relative;transition:all .3s}
+        .phone.dark{background:#0a0a0f;box-shadow:0 10px 40px rgba(0,0,0,.3),inset 0 0 0 2px #2a2a3a}
+        .phone.light{background:#e5e7eb;box-shadow:0 10px 40px rgba(0,0,0,.15),inset 0 0 0 2px #d1d5db}
+        .phone.desktop{width:280px;height:170px;border-radius:10px;padding:0}
+        .phone::before{content:'';position:absolute;top:12px;left:50%;transform:translateX(-50%);width:55px;height:18px;border-radius:9px;z-index:10}
+        .phone.dark::before{background:#1a1a24}
+        .phone.light::before{background:#d1d5db}
+        .phone.desktop::before{display:none}
+        .phone.desktop::after{content:'';position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);width:60px;height:14px;border-radius:0 0 5px 5px}
+        .phone.dark.desktop::after{background:#2a2a3a}
+        .phone.light.desktop::after{background:#d1d5db}
+        .phone-screen{width:100%;height:100%;border-radius:24px;overflow:hidden;position:relative}
+        .phone.desktop .phone-screen{border-radius:10px}
+        
+        .phone.dark .phone-bg{background:linear-gradient(180deg,#0a0a0f,#12121a)}
+        .phone.dark .phone-card{background:#1a1a24;border:1px solid #2a2a3a}
+        .phone.dark .phone-name,.phone.dark .phone-track{color:#fff}
+        .phone.dark .phone-tagline,.phone.dark .phone-artist{color:#8888a0}
+        .phone.dark .phone-stream-btn{background:#1a1a24;border:1px solid #2a2a3a;color:#8888a0}
+        .phone.dark .phone-now{color:#5a5a70}
+        
+        .phone.light .phone-bg{background:linear-gradient(180deg,#f8fafc,#e2e8f0)}
+        .phone.light .phone-card{background:#fff;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+        .phone.light .phone-name,.phone.light .phone-track{color:#1e293b}
+        .phone.light .phone-tagline,.phone.light .phone-artist{color:#64748b}
+        .phone.light .phone-stream-btn{background:#fff;border:1px solid #e2e8f0;color:#64748b}
+        .phone.light .phone-now{color:#94a3b8}
+        .phone.light .phone-glow{opacity:.5}
+        
+        .phone-bg{position:absolute;inset:0}
+        .phone-bg.has-image{background-size:cover;background-position:center}
+        .phone-bg.fade::after{content:'';position:absolute;inset:0}
+        .phone.dark .phone-bg.fade::after{background:linear-gradient(to bottom,transparent 30%,#0a0a0f 100%)}
+        .phone.light .phone-bg.fade::after{background:linear-gradient(to bottom,transparent 30%,#f8fafc 100%)}
+        .phone-bg.blur{filter:blur(10px);transform:scale(1.1)}
+        .phone-content{position:relative;height:100%;display:flex;flex-direction:column;align-items:center;padding:36px 12px 12px;overflow-y:auto;z-index:1}
+        .phone.desktop .phone-content{padding:12px;flex-direction:row;gap:14px}
+        .phone-glow{position:absolute;top:40px;left:50%;transform:translateX(-50%);width:80px;height:80px;background:radial-gradient(circle,rgba(255,0,170,.4) 0%,transparent 70%);filter:blur(20px);pointer-events:none}
+        .phone.desktop .phone-glow{top:12px;left:45px;width:45px;height:45px}
+        .phone-left{display:flex;flex-direction:column;align-items:center}
+        .phone.desktop .phone-left{align-items:flex-start}
+        .phone-logo{width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;margin-bottom:8px;position:relative;z-index:1;box-shadow:0 0 25px rgba(255,0,170,.3);overflow:hidden}
+        .phone-logo.rounded{border-radius:12px}
+        .phone-logo.square{border-radius:4px}
+        .phone.desktop .phone-logo{width:40px;height:40px;font-size:12px;margin-bottom:5px}
+        .phone-logo img{width:100%;height:100%;object-fit:cover}
+        .phone-name{font-size:15px;font-weight:700;margin-bottom:2px;text-align:center}
+        .phone.desktop .phone-name{font-size:11px;text-align:left}
+        .phone-tagline{font-size:9px;margin-bottom:8px;text-align:center}
+        .phone.desktop .phone-tagline{font-size:8px;text-align:left;margin-bottom:5px}
+        .phone-streams{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap;justify-content:center}
+        .phone.desktop .phone-streams{justify-content:flex-start}
+        .phone-stream-btn{padding:4px 10px;border-radius:12px;font-size:8px;font-weight:600;cursor:pointer;transition:all .2s}
+        .phone-stream-btn.active{background:linear-gradient(135deg,#6366f1,#ec4899)!important;border-color:transparent!important;color:#fff!important}
+        .phone-card{width:100%;border-radius:10px;padding:10px}
+        .phone.desktop .phone-card{flex:1;border-radius:8px;padding:8px}
+        .phone-live{display:inline-flex;align-items:center;gap:4px;background:rgba(239,68,68,.15);color:#ef4444;font-size:7px;font-weight:600;padding:2px 5px;border-radius:20px;margin-bottom:5px}
+        .phone-live::before{content:'';width:4px;height:4px;background:#ef4444;border-radius:50%}
+        .phone-now{font-size:7px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+        .phone-track{font-size:11px;font-weight:600;margin-bottom:1px}
+        .phone.desktop .phone-track{font-size:9px}
+        .phone-artist{font-size:9px;margin-bottom:8px}
+        .phone.desktop .phone-artist{font-size:8px;margin-bottom:6px}
+        .phone-play{width:100%;padding:9px;border-radius:8px;border:none;font-size:10px;font-weight:600;color:#fff;display:flex;align-items:center;justify-content:center;gap:4px;cursor:pointer}
+        .phone.desktop .phone-play{padding:7px;font-size:9px}
+        .phone-play svg{width:10px;height:10px;fill:#fff}
+        
+        .status{margin-top:10px;padding:8px;background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.15);border-radius:7px;font-size:10px;color:var(--text-2);text-align:center}
+        .status strong{color:var(--accent)}
+        
+        @media(max-width:1000px){.preview{width:300px}.phone{transform:scale(.85)}}
+        @media(max-width:850px){.preview{display:none}}
+        @media(max-width:700px){.sidebar{display:none}.main{margin-left:0}.content{padding:16px}.form-row,.colors-row{grid-template-columns:1fr}.stream-fields{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="brand"><div class="brand-icon" id="brandIcon">DR</div><div class="brand-text"><span id="brandName">Demo Radio</span><span>Admin Panel</span></div></div>
+        
+        <div class="sidebar-section">
+            <div class="sidebar-section-title" data-i18n="adminTheme">Admin téma</div>
+            <div class="toggle-group">
+                <button class="toggle-btn active" onclick="setAdminTheme('light')"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg><span data-i18n="light">Light</span></button>
+                <button class="toggle-btn" onclick="setAdminTheme('dark')"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><span data-i18n="dark">Dark</span></button>
+            </div>
+        </div>
+        
+        <div class="sidebar-section">
+            <div class="sidebar-section-title" data-i18n="language">Nyelv</div>
+            <div class="lang-select">
+                <button class="lang-btn" onclick="toggleLangDropdown()">
+                    <span class="flag" id="currentFlag">🇭🇺</span>
+                    <span id="currentLang">Magyar</span>
+                    <svg class="arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div class="lang-dropdown" id="langDropdown">
+                    <div class="lang-option active" onclick="setLanguage('hu')"><span class="flag">🇭🇺</span>Magyar</div>
+                    <div class="lang-option" onclick="setLanguage('en')"><span class="flag">🇬🇧</span>English</div>
+                    <div class="lang-option" onclick="setLanguage('es')"><span class="flag">🇪🇸</span>Español</div>
+                    <div class="lang-option" onclick="setLanguage('pt')"><span class="flag">🇵🇹</span>Português</div>
+                    <div class="lang-option" onclick="setLanguage('de')"><span class="flag">🇩🇪</span>Deutsch</div>
+                    <div class="lang-option" onclick="setLanguage('fr')"><span class="flag">🇫🇷</span>Français</div>
+                    <div class="lang-option" onclick="setLanguage('it')"><span class="flag">🇮🇹</span>Italiano</div>
+                    <div class="lang-option" onclick="setLanguage('pl')"><span class="flag">🇵🇱</span>Polski</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="sidebar-section">
+            <div class="sidebar-section-title" data-i18n="settings">Beállítások</div>
+            <a class="nav-item active" onclick="showPage('radio')"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg><span data-i18n="radioSettings">Rádió beállítások</span></a>
+            <a class="nav-item" onclick="showPage('stream')"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/></svg><span data-i18n="stream">Stream</span></a>
+            <a class="nav-item" onclick="showPage('social')"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2z"/></svg><span data-i18n="socialMedia">Közösségi média</span></a>
+            <a class="nav-item"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg><span data-i18n="links">Linkek</span></a>
+        </div>
+        
+        <div class="sidebar-section">
+            <div class="sidebar-section-title" data-i18n="content">Tartalom</div>
+            <a class="nav-item"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span data-i18n="schedule">Műsorrend</span></a>
+            <a class="nav-item"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span data-i18n="djs">DJ-k</span></a>
+        </div>
+        
+        <div class="sidebar-footer">
+            <div class="sidebar-footer-text">Radio Landing Admin v1.0</div>
+        </div>
+    </aside>
+    
+    <div class="main">
+        <main class="content">
+            <!-- RADIO SETTINGS PAGE -->
+            <div class="page-section active" id="page-radio">
+                <div class="page-header">
+                    <h1 class="page-title" data-i18n="radioSettings">Rádió beállítások</h1>
+                    <p class="page-desc" data-i18n="radioSettingsDesc">Alapadatok és megjelenés</p>
+                </div>
+                
+                <!-- Basic Info Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title"><span class="card-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span><span data-i18n="basicInformation">Alapinformációk</span></h2>
+                        <span class="card-badge" data-i18n="required">Kötelező</span>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group full">
+                            <label class="form-label"><span data-i18n="radioName">Rádió neve</span> <span class="req">*</span></label>
+                            <input type="text" class="form-input" id="radioName" value="Demo Radio">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group full">
+                            <label class="form-label" data-i18n="tagline">Szlogen</label>
+                            <input type="text" class="form-input" id="radioTagline" value="A legjobb zenék, éjjel-nappal">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group full">
+                            <label class="form-label" data-i18n="description">Leírás</label>
+                            <textarea class="form-textarea" id="radioDesc" data-i18n-placeholder="descriptionPlaceholder" placeholder="Rövid bemutatkozás a rádióról..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Logo Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title"><span class="card-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></span><span data-i18n="logo">Logó</span></h2>
+                    </div>
+                    <div class="form-group" style="margin-bottom:14px">
+                        <label class="form-label" data-i18n="radioLogo">Rádió logó</label>
+                        <div class="logo-section">
+                            <div class="logo-box" id="logoPreview"><span id="logoText">DR</span></div>
+                            <div class="upload-zone" onclick="document.getElementById('logoUpload').click()">
+                                <input type="file" id="logoUpload" accept="image/*" style="display:none" onchange="handleLogoUpload(this)">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                <p class="upload-text"><strong data-i18n="upload">Feltöltés</strong> <span data-i18n="orDragHere">vagy húzd ide</span></p>
+                                <p class="upload-hint">PNG, JPG • Max 2MB</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="logoDisplay">Logó megjelenítés</label>
+                        <div class="logo-options">
+                            <div class="logo-option active" onclick="setLogoStyle('circle')">
+                                <div class="logo-option-preview circle" id="logoOptCircle">DR</div>
+                                <div class="logo-option-label" data-i18n="circle">Kör</div>
+                            </div>
+                            <div class="logo-option" onclick="setLogoStyle('rounded')">
+                                <div class="logo-option-preview rounded" id="logoOptRounded">DR</div>
+                                <div class="logo-option-label" data-i18n="rounded">Lekerekített</div>
+                            </div>
+                            <div class="logo-option" onclick="setLogoStyle('square')">
+                                <div class="logo-option-preview square" id="logoOptSquare">DR</div>
+                                <div class="logo-option-label" data-i18n="square">Négyzet</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-section">
+                        <div class="bg-section-title" data-i18n="background">Háttér</div>
+                        <div class="bg-section-desc" data-i18n="backgroundDesc">Válassz háttérképet a landing oldalhoz</div>
+                        <div class="bg-options">
+                            <div class="bg-option active" onclick="setBgType('none')">
+                                <div class="bg-option-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.5 5.5l13 13"/></svg></div>
+                                <div class="bg-option-text"><div class="bg-option-label" data-i18n="none">Nincs</div></div>
+                            </div>
+                            <div class="bg-option" onclick="setBgType('custom');document.getElementById('bgUpload').click()">
+                                <input type="file" id="bgUpload" accept="image/*" style="display:none" onchange="handleBgUpload(this)">
+                                <div class="bg-option-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>
+                                <div class="bg-option-text"><div class="bg-option-label" data-i18n="customImage">Egyéni kép</div><div class="bg-option-upload" data-i18n="upload">Feltöltés</div></div>
+                            </div>
+                        </div>
+                        <div class="bg-effects" id="bgEffects" style="display:none">
+                            <div class="bg-effects-title" data-i18n="effects">Effektek</div>
+                            <div class="effect-options">
+                                <div class="effect-option active" onclick="setBgEffect('none')">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.5 5.5l13 13"/></svg>
+                                    <div class="effect-option-label" data-i18n="none">Nincs</div>
+                                </div>
+                                <div class="effect-option" onclick="setBgEffect('fade')">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7" opacity=".5"/><rect x="3" y="14" width="7" height="7" opacity=".3"/><rect x="14" y="14" width="7" height="7" opacity=".1"/></svg>
+                                    <div class="effect-option-label">Fade Out</div>
+                                </div>
+                                <div class="effect-option" onclick="setBgEffect('blur')">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 3c-1.5 2-3 3.5-3 6 0 2.5 1.5 4 3 6s3 3.5 3 6M9 3c-1.5 2-3 3.5-3 6 0 2.5 1.5 4 3 6s3 3.5 3 6M15 3c-1.5 2-3 3.5-3 6 0 2.5 1.5 4 3 6s3 3.5 3 6"/></svg>
+                                    <div class="effect-option-label">Blur</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Colors Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title"><span class="card-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg></span><span data-i18n="colors">Színek</span></h2>
+                    </div>
+                    <div class="colors-row">
+                        <div class="color-item"><span class="color-label" data-i18n="primary">Elsődleges</span><div class="color-picker"><input type="color" class="color-swatch" id="color1" value="#00d4ff"><input type="text" class="color-hex" id="color1Hex" value="#00d4ff"></div></div>
+                        <div class="color-item"><span class="color-label" data-i18n="secondary">Másodlagos</span><div class="color-picker"><input type="color" class="color-swatch" id="color2" value="#ff00aa"><input type="text" class="color-hex" id="color2Hex" value="#ff00aa"></div></div>
+                        <div class="color-item"><span class="color-label" data-i18n="accent">Kiegészítő</span><div class="color-picker"><input type="color" class="color-swatch" id="color3" value="#9945ff"><input type="text" class="color-hex" id="color3Hex" value="#9945ff"></div></div>
+                    </div>
+                </div>
+                
+                <div class="btn-row">
+                    <button class="btn btn-ghost"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg><span data-i18n="reset">Visszaállítás</span></button>
+                    <button class="btn btn-primary"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span data-i18n="save">Mentés</span></button>
+                </div>
+            </div>
+            
+            <!-- STREAM PAGE -->
+            <div class="page-section" id="page-stream">
+                <div class="page-header">
+                    <h1 class="page-title" data-i18n="stream">Stream</h1>
+                    <p class="page-desc" data-i18n="streamPageDesc">Stream források kezelése</p>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title"><span class="card-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/></svg></span><span data-i18n="streamSources">Stream források</span></h2>
+                    </div>
+                    <p style="font-size:11px;color:var(--text-2);margin-bottom:14px" data-i18n="streamDesc">Add meg a stream URL-eket. Ha több stream van, a hallgatók válthatnak közöttük.</p>
+                    <div class="stream-list" id="streamList"></div>
+                    <button class="add-stream-btn" onclick="addStream()">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <span data-i18n="addStream">Új stream hozzáadása</span>
+                    </button>
+                </div>
+                
+                <div class="btn-row">
+                    <button class="btn btn-ghost"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg><span data-i18n="reset">Visszaállítás</span></button>
+                    <button class="btn btn-primary"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span data-i18n="save">Mentés</span></button>
+                </div>
+            </div>
+            
+            <!-- SOCIAL MEDIA PAGE (placeholder) -->
+            <div class="page-section" id="page-social">
+                <div class="page-header">
+                    <h1 class="page-title" data-i18n="socialMedia">Közösségi média</h1>
+                    <p class="page-desc" data-i18n="socialMediaDesc">Közösségi média linkek kezelése</p>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title"><span class="card-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2z"/></svg></span><span data-i18n="socialLinks">Közösségi linkek</span></h2>
+                    </div>
+                    <p style="font-size:12px;color:var(--text-2);text-align:center;padding:40px 0" data-i18n="comingSoon">Hamarosan...</p>
+                </div>
+            </div>
+        </main>
+        
+        <aside class="preview">
+            <div class="preview-header">
+                <span class="preview-title"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg><span data-i18n="livePreview">Élő előnézet</span></span>
+                <span class="preview-live" data-i18n="synced">Szinkronban</span>
+            </div>
+            
+            <div class="preview-toggles">
+                <div class="preview-toggle-group">
+                    <button class="preview-toggle-btn active" onclick="setDevice('mobile')"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg><span data-i18n="mobile">Mobil</span></button>
+                    <button class="preview-toggle-btn" onclick="setDevice('desktop')"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg><span data-i18n="desktop">Asztali</span></button>
+                </div>
+                <div class="preview-toggle-group">
+                    <button class="preview-toggle-btn" onclick="setLandingTheme('light')"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2"/></svg></button>
+                    <button class="preview-toggle-btn active" onclick="setLandingTheme('dark')"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></button>
+                </div>
+            </div>
+            
+            <div class="phone-wrap">
+                <div class="phone dark" id="phone">
+                    <div class="phone-screen">
+                        <div class="phone-bg" id="phoneBg"></div>
+                        <div class="phone-content">
+                            <div class="phone-glow" id="phoneGlow"></div>
+                            <div class="phone-left">
+                                <div class="phone-logo" id="phoneLogo"><span id="phoneLogoText">DR</span></div>
+                                <div class="phone-name" id="phoneName">Demo Radio</div>
+                                <div class="phone-tagline" id="phoneTagline">A legjobb zenék, éjjel-nappal</div>
+                                <div class="phone-streams" id="phoneStreams"></div>
+                            </div>
+                            <div class="phone-card">
+                                <div class="phone-live">ÉLŐ ADÁS</div>
+                                <div class="phone-now">MOST SZÓL</div>
+                                <div class="phone-track" id="phoneTrack">Blinding Lights</div>
+                                <div class="phone-artist">The Weeknd</div>
+                                <button class="phone-play" id="phonePlay"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Listen Live</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="status" id="status"><span data-i18n="changeToSee">Változtass valamit és</span> <strong data-i18n="instantlyVisible">azonnal látod</strong></div>
+        </aside>
+    </div>
+</div>
+
+<script>
+const translations = {
+    hu: {
+        adminTheme:'Admin téma',light:'Light',dark:'Dark',language:'Nyelv',settings:'Beállítások',radioSettings:'Rádió beállítások',stream:'Stream',socialMedia:'Közösségi média',links:'Linkek',content:'Tartalom',schedule:'Műsorrend',djs:'DJ-k',radioSettingsDesc:'Alapadatok és megjelenés',streamPageDesc:'Stream források kezelése',socialMediaDesc:'Közösségi média linkek kezelése',basicInformation:'Alapinformációk',required:'Kötelező',radioName:'Rádió neve',tagline:'Szlogen',description:'Leírás',descriptionPlaceholder:'Rövid bemutatkozás a rádióról...',logo:'Logó',radioLogo:'Rádió logó',upload:'Feltöltés',orDragHere:'vagy húzd ide',logoDisplay:'Logó megjelenítés',circle:'Kör',rounded:'Lekerekített',square:'Négyzet',background:'Háttér',backgroundDesc:'Válassz háttérképet a landing oldalhoz',none:'Nincs',customImage:'Egyéni kép',effects:'Effektek',colors:'Színek',primary:'Elsődleges',secondary:'Másodlagos',accent:'Kiegészítő',reset:'Visszaállítás',save:'Mentés',livePreview:'Élő előnézet',synced:'Szinkronban',mobile:'Mobil',desktop:'Asztali',changeToSee:'Változtass valamit és',instantlyVisible:'azonnal látod',streamSources:'Stream források',streamDesc:'Add meg a stream URL-eket. Ha több stream van, a hallgatók válthatnak közöttük.',addStream:'Új stream hozzáadása',primaryStream:'Elsődleges',secondaryStream:'Másodlagos',streamName:'Stream neve',bitrate:'Bitrate',streamUrl:'Stream URL',newStream:'Új stream',socialLinks:'Közösségi linkek',comingSoon:'Hamarosan...'
+    },
+    en: {
+        adminTheme:'Admin theme',light:'Light',dark:'Dark',language:'Language',settings:'Settings',radioSettings:'Radio settings',stream:'Stream',socialMedia:'Social media',links:'Links',content:'Content',schedule:'Schedule',djs:'DJs',radioSettingsDesc:'Basic info and appearance',streamPageDesc:'Manage stream sources',socialMediaDesc:'Manage social media links',basicInformation:'Basic information',required:'Required',radioName:'Radio name',tagline:'Tagline',description:'Description',descriptionPlaceholder:'Short description about the radio...',logo:'Logo',radioLogo:'Radio logo',upload:'Upload',orDragHere:'or drag here',logoDisplay:'Logo display',circle:'Circle',rounded:'Rounded',square:'Square',background:'Background',backgroundDesc:'Choose a background image for the landing page',none:'None',customImage:'Custom image',effects:'Effects',colors:'Colors',primary:'Primary',secondary:'Secondary',accent:'Accent',reset:'Reset',save:'Save',livePreview:'Live preview',synced:'Synced',mobile:'Mobile',desktop:'Desktop',changeToSee:'Make a change and',instantlyVisible:'see it instantly',streamSources:'Stream sources',streamDesc:'Enter stream URLs. If multiple streams exist, listeners can switch between them.',addStream:'Add new stream',primaryStream:'Primary',secondaryStream:'Secondary',streamName:'Stream name',bitrate:'Bitrate',streamUrl:'Stream URL',newStream:'New stream',socialLinks:'Social links',comingSoon:'Coming soon...'
+    },
+    es: {
+        adminTheme:'Tema admin',light:'Claro',dark:'Oscuro',language:'Idioma',settings:'Configuración',radioSettings:'Config. de radio',stream:'Stream',socialMedia:'Redes sociales',links:'Enlaces',content:'Contenido',schedule:'Horario',djs:'DJs',radioSettingsDesc:'Info básica y apariencia',streamPageDesc:'Gestionar fuentes de stream',socialMediaDesc:'Gestionar enlaces de redes sociales',basicInformation:'Información básica',required:'Requerido',radioName:'Nombre de radio',tagline:'Eslogan',description:'Descripción',descriptionPlaceholder:'Breve descripción de la radio...',logo:'Logo',radioLogo:'Logo de radio',upload:'Subir',orDragHere:'o arrastra aquí',logoDisplay:'Mostrar logo',circle:'Círculo',rounded:'Redondeado',square:'Cuadrado',background:'Fondo',backgroundDesc:'Elige una imagen de fondo',none:'Ninguno',customImage:'Imagen personalizada',effects:'Efectos',colors:'Colores',primary:'Primario',secondary:'Secundario',accent:'Acento',reset:'Restablecer',save:'Guardar',livePreview:'Vista previa',synced:'Sincronizado',mobile:'Móvil',desktop:'Escritorio',changeToSee:'Haz un cambio y',instantlyVisible:'míralo al instante',streamSources:'Fuentes de stream',streamDesc:'Ingresa las URLs de stream.',addStream:'Añadir stream',primaryStream:'Primario',secondaryStream:'Secundario',streamName:'Nombre',bitrate:'Bitrate',streamUrl:'URL del stream',newStream:'Nuevo stream',socialLinks:'Enlaces sociales',comingSoon:'Próximamente...'
+    },
+    pt: {
+        adminTheme:'Tema admin',light:'Claro',dark:'Escuro',language:'Idioma',settings:'Configurações',radioSettings:'Config. de rádio',stream:'Stream',socialMedia:'Redes sociais',links:'Links',content:'Conteúdo',schedule:'Programação',djs:'DJs',radioSettingsDesc:'Info básica e aparência',streamPageDesc:'Gerenciar fontes de stream',socialMediaDesc:'Gerenciar links de redes sociais',basicInformation:'Informações básicas',required:'Obrigatório',radioName:'Nome da rádio',tagline:'Slogan',description:'Descrição',descriptionPlaceholder:'Breve descrição da rádio...',logo:'Logo',radioLogo:'Logo da rádio',upload:'Upload',orDragHere:'ou arraste aqui',logoDisplay:'Exibição do logo',circle:'Círculo',rounded:'Arredondado',square:'Quadrado',background:'Fundo',backgroundDesc:'Escolha uma imagem de fundo',none:'Nenhum',customImage:'Imagem personalizada',effects:'Efeitos',colors:'Cores',primary:'Primário',secondary:'Secundário',accent:'Destaque',reset:'Redefinir',save:'Salvar',livePreview:'Pré-visualização',synced:'Sincronizado',mobile:'Móvel',desktop:'Desktop',changeToSee:'Faça uma mudança e',instantlyVisible:'veja instantaneamente',streamSources:'Fontes de stream',streamDesc:'Insira as URLs de stream.',addStream:'Adicionar stream',primaryStream:'Primário',secondaryStream:'Secundário',streamName:'Nome',bitrate:'Bitrate',streamUrl:'URL do stream',newStream:'Novo stream',socialLinks:'Links sociais',comingSoon:'Em breve...'
+    },
+    de: {
+        adminTheme:'Admin-Thema',light:'Hell',dark:'Dunkel',language:'Sprache',settings:'Einstellungen',radioSettings:'Radio-Einstellungen',stream:'Stream',socialMedia:'Soziale Medien',links:'Links',content:'Inhalt',schedule:'Zeitplan',djs:'DJs',radioSettingsDesc:'Grundinfo und Aussehen',streamPageDesc:'Stream-Quellen verwalten',socialMediaDesc:'Social-Media-Links verwalten',basicInformation:'Grundinformationen',required:'Erforderlich',radioName:'Radioname',tagline:'Slogan',description:'Beschreibung',descriptionPlaceholder:'Kurze Beschreibung des Radios...',logo:'Logo',radioLogo:'Radio-Logo',upload:'Hochladen',orDragHere:'oder hierher ziehen',logoDisplay:'Logo-Anzeige',circle:'Kreis',rounded:'Abgerundet',square:'Quadrat',background:'Hintergrund',backgroundDesc:'Wählen Sie ein Hintergrundbild',none:'Keins',customImage:'Eigenes Bild',effects:'Effekte',colors:'Farben',primary:'Primär',secondary:'Sekundär',accent:'Akzent',reset:'Zurücksetzen',save:'Speichern',livePreview:'Live-Vorschau',synced:'Synchronisiert',mobile:'Mobil',desktop:'Desktop',changeToSee:'Ändern Sie etwas und',instantlyVisible:'sehen Sie es sofort',streamSources:'Stream-Quellen',streamDesc:'Geben Sie Stream-URLs ein.',addStream:'Stream hinzufügen',primaryStream:'Primär',secondaryStream:'Sekundär',streamName:'Name',bitrate:'Bitrate',streamUrl:'Stream-URL',newStream:'Neuer Stream',socialLinks:'Soziale Links',comingSoon:'Demnächst...'
+    },
+    fr: {
+        adminTheme:'Thème admin',light:'Clair',dark:'Sombre',language:'Langue',settings:'Paramètres',radioSettings:'Paramètres radio',stream:'Stream',socialMedia:'Réseaux sociaux',links:'Liens',content:'Contenu',schedule:'Programme',djs:'DJs',radioSettingsDesc:'Info de base et apparence',streamPageDesc:'Gérer les sources de stream',socialMediaDesc:'Gérer les liens des réseaux sociaux',basicInformation:'Informations de base',required:'Requis',radioName:'Nom de la radio',tagline:'Slogan',description:'Description',descriptionPlaceholder:'Brève description de la radio...',logo:'Logo',radioLogo:'Logo de la radio',upload:'Télécharger',orDragHere:'ou glissez ici',logoDisplay:'Affichage du logo',circle:'Cercle',rounded:'Arrondi',square:'Carré',background:'Arrière-plan',backgroundDesc:'Choisissez une image de fond',none:'Aucun',customImage:'Image personnalisée',effects:'Effets',colors:'Couleurs',primary:'Primaire',secondary:'Secondaire',accent:'Accent',reset:'Réinitialiser',save:'Enregistrer',livePreview:'Aperçu en direct',synced:'Synchronisé',mobile:'Mobile',desktop:'Bureau',changeToSee:'Faites un changement et',instantlyVisible:'voyez-le instantanément',streamSources:'Sources de stream',streamDesc:'Entrez les URLs de stream.',addStream:'Ajouter un stream',primaryStream:'Primaire',secondaryStream:'Secondaire',streamName:'Nom',bitrate:'Bitrate',streamUrl:'URL du stream',newStream:'Nouveau stream',socialLinks:'Liens sociaux',comingSoon:'Bientôt...'
+    },
+    it: {
+        adminTheme:'Tema admin',light:'Chiaro',dark:'Scuro',language:'Lingua',settings:'Impostazioni',radioSettings:'Impostazioni radio',stream:'Stream',socialMedia:'Social media',links:'Link',content:'Contenuto',schedule:'Programma',djs:'DJ',radioSettingsDesc:'Info base e aspetto',streamPageDesc:'Gestisci fonti stream',socialMediaDesc:'Gestisci link social media',basicInformation:'Informazioni di base',required:'Obbligatorio',radioName:'Nome radio',tagline:'Slogan',description:'Descrizione',descriptionPlaceholder:'Breve descrizione della radio...',logo:'Logo',radioLogo:'Logo radio',upload:'Carica',orDragHere:'o trascina qui',logoDisplay:'Visualizzazione logo',circle:'Cerchio',rounded:'Arrotondato',square:'Quadrato',background:'Sfondo',backgroundDesc:'Scegli un\'immagine di sfondo',none:'Nessuno',customImage:'Immagine personalizzata',effects:'Effetti',colors:'Colori',primary:'Primario',secondary:'Secondario',accent:'Accento',reset:'Ripristina',save:'Salva',livePreview:'Anteprima live',synced:'Sincronizzato',mobile:'Mobile',desktop:'Desktop',changeToSee:'Fai una modifica e',instantlyVisible:'vedila subito',streamSources:'Fonti stream',streamDesc:'Inserisci gli URL stream.',addStream:'Aggiungi stream',primaryStream:'Primario',secondaryStream:'Secondario',streamName:'Nome',bitrate:'Bitrate',streamUrl:'URL stream',newStream:'Nuovo stream',socialLinks:'Link sociali',comingSoon:'Prossimamente...'
+    },
+    pl: {
+        adminTheme:'Motyw admina',light:'Jasny',dark:'Ciemny',language:'Język',settings:'Ustawienia',radioSettings:'Ustawienia radia',stream:'Stream',socialMedia:'Media społecznościowe',links:'Linki',content:'Treść',schedule:'Harmonogram',djs:'DJ-e',radioSettingsDesc:'Podstawowe info i wygląd',streamPageDesc:'Zarządzaj źródłami streamu',socialMediaDesc:'Zarządzaj linkami mediów społecznościowych',basicInformation:'Podstawowe informacje',required:'Wymagane',radioName:'Nazwa radia',tagline:'Slogan',description:'Opis',descriptionPlaceholder:'Krótki opis radia...',logo:'Logo',radioLogo:'Logo radia',upload:'Prześlij',orDragHere:'lub przeciągnij tutaj',logoDisplay:'Wyświetlanie logo',circle:'Koło',rounded:'Zaokrąglone',square:'Kwadrat',background:'Tło',backgroundDesc:'Wybierz obraz tła',none:'Brak',customImage:'Własny obraz',effects:'Efekty',colors:'Kolory',primary:'Podstawowy',secondary:'Drugorzędny',accent:'Akcent',reset:'Resetuj',save:'Zapisz',livePreview:'Podgląd na żywo',synced:'Zsynchronizowany',mobile:'Mobilny',desktop:'Pulpit',changeToSee:'Zmień coś i',instantlyVisible:'zobacz natychmiast',streamSources:'Źródła streamu',streamDesc:'Wprowadź adresy URL streamów.',addStream:'Dodaj stream',primaryStream:'Podstawowy',secondaryStream:'Drugorzędny',streamName:'Nazwa',bitrate:'Bitrate',streamUrl:'URL streamu',newStream:'Nowy stream',socialLinks:'Linki społecznościowe',comingSoon:'Wkrótce...'
+    }
+};
+
+const langData = {hu:{flag:'🇭🇺',name:'Magyar'},en:{flag:'🇬🇧',name:'English'},es:{flag:'🇪🇸',name:'Español'},pt:{flag:'🇵🇹',name:'Português'},de:{flag:'🇩🇪',name:'Deutsch'},fr:{flag:'🇫🇷',name:'Français'},it:{flag:'🇮🇹',name:'Italiano'},pl:{flag:'🇵🇱',name:'Polski'}};
+
+let currentLang = 'hu';
+let streams = [{id:1,name:'Fő stream',url:'https://stream.example.com/live',bitrate:'320k',primary:true},{id:2,name:'Lo-Fi',url:'https://stream.example.com/lofi',bitrate:'128k',primary:false}];
+let activeStreamId = 1;
+let logoStyle = 'circle';
+let bgType = 'none';
+let bgEffect = 'none';
+let bgImageUrl = null;
+
+function applyTranslations() {
+    const t = translations[currentLang];
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (t[key]) el.textContent = t[key];
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (t[key]) el.placeholder = t[key];
+    });
+    renderStreams();
+}
+
+function showPage(page) {
+    document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+    event.target.closest('.nav-item').classList.add('active');
+}
+
+function toggleLangDropdown() {
+    document.querySelector('.lang-btn').classList.toggle('open');
+    document.getElementById('langDropdown').classList.toggle('show');
+}
+
+function setLanguage(lang) {
+    currentLang = lang;
+    document.getElementById('currentFlag').textContent = langData[lang].flag;
+    document.getElementById('currentLang').textContent = langData[lang].name;
+    document.querySelectorAll('.lang-option').forEach(o => o.classList.remove('active'));
+    event.target.closest('.lang-option').classList.add('active');
+    toggleLangDropdown();
+    applyTranslations();
+}
+
+document.addEventListener('click', e => {
+    if (!e.target.closest('.lang-select')) {
+        document.querySelector('.lang-btn').classList.remove('open');
+        document.getElementById('langDropdown').classList.remove('show');
+    }
+});
+
+function setAdminTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    document.querySelectorAll('.sidebar .toggle-btn').forEach((b,i) => b.classList.toggle('active', (t==='light'&&i===0)||(t==='dark'&&i===1)));
+}
+
+function setDevice(d) {
+    document.getElementById('phone').classList.toggle('desktop', d === 'desktop');
+    document.querySelectorAll('.preview-toggle-group:first-child .preview-toggle-btn').forEach((b,i) => b.classList.toggle('active', (d==='mobile'&&i===0)||(d==='desktop'&&i===1)));
+}
+
+function setLandingTheme(t) {
+    const phone = document.getElementById('phone');
+    phone.classList.remove('light', 'dark');
+    phone.classList.add(t);
+    document.querySelectorAll('.preview-toggle-group:last-child .preview-toggle-btn').forEach((b,i) => b.classList.toggle('active', (t==='light'&&i===0)||(t==='dark'&&i===1)));
+}
+
+function renderStreams() {
+    const t = translations[currentLang];
+    const list = document.getElementById('streamList');
+    const phoneStreams = document.getElementById('phoneStreams');
+    
+    list.innerHTML = streams.map(s => `
+        <div class="stream-item ${s.primary ? 'active' : ''}">
+            <div class="stream-item-header">
+                <div class="stream-item-title">${s.primary ? `<span class="stream-badge">${t.primaryStream}</span>` : `<span class="stream-badge secondary">${t.secondaryStream}</span>`}</div>
+                <div class="stream-actions">
+                    ${!s.primary ? `<button class="stream-action" onclick="setPrimaryStream(${s.id})"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></button>` : ''}
+                    ${streams.length > 1 ? `<button class="stream-action delete" onclick="deleteStream(${s.id})"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>` : ''}
+                </div>
+            </div>
+            <div class="stream-fields">
+                <input type="text" class="form-input" value="${s.name}" placeholder="${t.streamName}" onchange="updateStream(${s.id},'name',this.value)">
+                <input type="text" class="form-input" value="${s.bitrate}" placeholder="${t.bitrate}" onchange="updateStream(${s.id},'bitrate',this.value)">
+            </div>
+            <div style="margin-top:8px"><input type="text" class="form-input" value="${s.url}" placeholder="${t.streamUrl}" style="font-size:10px" onchange="updateStream(${s.id},'url',this.value)"></div>
+        </div>
+    `).join('');
+    
+    phoneStreams.innerHTML = streams.length > 1 ? streams.map(s => `<div class="phone-stream-btn ${s.id===activeStreamId?'active':''}" onclick="setActiveStream(${s.id})">${s.name}</div>`).join('') : '';
+    phoneStreams.style.display = streams.length > 1 ? 'flex' : 'none';
+}
+
+function addStream() {
+    const t = translations[currentLang];
+    streams.push({id:Math.max(...streams.map(s=>s.id))+1,name:t.newStream,url:'',bitrate:'128k',primary:false});
+    renderStreams();
+}
+function deleteStream(id) { streams = streams.filter(s=>s.id!==id); if(activeStreamId===id&&streams.length>0)activeStreamId=streams[0].id; renderStreams(); }
+function updateStream(id,field,value) { const s=streams.find(s=>s.id===id); if(s)s[field]=value; renderStreams(); }
+function setPrimaryStream(id) { streams.forEach(s=>s.primary=s.id===id); renderStreams(); }
+function setActiveStream(id) { activeStreamId=id; renderStreams(); }
+
+function setLogoStyle(style) {
+    logoStyle = style;
+    document.querySelectorAll('.logo-option').forEach(o => o.classList.remove('active'));
+    event.target.closest('.logo-option').classList.add('active');
+    const phoneLogo = document.getElementById('phoneLogo');
+    phoneLogo.className = 'phone-logo';
+    if (style !== 'circle') phoneLogo.classList.add(style);
+}
+
+function handleLogoUpload(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            document.getElementById('logoPreview').innerHTML = `<img src="${e.target.result}">`;
+            document.getElementById('phoneLogo').innerHTML = `<img src="${e.target.result}">`;
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function setBgType(type) {
+    bgType = type;
+    document.querySelectorAll('.bg-option').forEach(o => o.classList.remove('active'));
+    event.target.closest('.bg-option').classList.add('active');
+    if (type === 'none') {
+        document.getElementById('bgEffects').style.display = 'none';
+        document.getElementById('phoneBg').className = 'phone-bg';
+        document.getElementById('phoneBg').style.backgroundImage = '';
+        bgImageUrl = null;
+    } else {
+        document.getElementById('bgEffects').style.display = 'block';
+    }
+}
+
+function handleBgUpload(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            bgImageUrl = e.target.result;
+            const phoneBg = document.getElementById('phoneBg');
+            phoneBg.style.backgroundImage = `url(${e.target.result})`;
+            phoneBg.classList.add('has-image');
+            document.getElementById('bgEffects').style.display = 'block';
+            applyBgEffect();
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function setBgEffect(effect) {
+    bgEffect = effect;
+    document.querySelectorAll('.effect-option').forEach(o => o.classList.remove('active'));
+    event.target.closest('.effect-option').classList.add('active');
+    applyBgEffect();
+}
+
+function applyBgEffect() {
+    const phoneBg = document.getElementById('phoneBg');
+    phoneBg.classList.remove('fade', 'blur');
+    if (bgEffect !== 'none' && bgImageUrl) phoneBg.classList.add(bgEffect);
+}
+
+function updateColors() {
+    const c1 = document.getElementById('color1').value;
+    const c2 = document.getElementById('color2').value;
+    const c3 = document.getElementById('color3').value;
+    const grad = `linear-gradient(135deg,${c1},${c2},${c3})`;
+    document.getElementById('phoneLogo').style.background = grad;
+    document.getElementById('logoPreview').style.background = grad;
+    document.getElementById('phonePlay').style.background = grad;
+    document.getElementById('phoneGlow').style.background = `radial-gradient(circle,${c2}66 0%,transparent 70%)`;
+    document.getElementById('phoneTrack').style.color = c2;
+    document.querySelectorAll('.logo-option-preview').forEach(p => p.style.background = grad);
+}
+
+function updateBrandFromName() {
+    const name = document.getElementById('radioName').value;
+    const words = name.split(' ').filter(w => w);
+    const initials = words.slice(0, 2).map(w => w[0]).join('').toUpperCase() || 'RN';
+    document.getElementById('logoText').textContent = initials;
+    document.getElementById('phoneLogoText').textContent = initials;
+    document.getElementById('brandIcon').textContent = initials;
+    document.getElementById('brandName').textContent = name || 'Radio';
+    document.getElementById('phoneName').textContent = name || 'Radio';
+    document.querySelectorAll('.logo-option-preview').forEach(p => p.textContent = initials);
+}
+
+document.getElementById('radioName').addEventListener('input', updateBrandFromName);
+document.getElementById('radioTagline').addEventListener('input', e => { document.getElementById('phoneTagline').textContent = e.target.value || 'Tagline'; });
+
+['color1','color2','color3'].forEach(id => {
+    const swatch = document.getElementById(id);
+    const hex = document.getElementById(id + 'Hex');
+    swatch.addEventListener('input', () => { hex.value = swatch.value; updateColors(); });
+    hex.addEventListener('input', e => { if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) { swatch.value = e.target.value; updateColors(); }});
+});
+
+renderStreams();
+updateColors();
+applyTranslations();
+</script>
+</body>
+</html>
